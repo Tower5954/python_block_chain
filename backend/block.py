@@ -1,5 +1,6 @@
 import time
 from backend.util.crypto_hash import crypto_hash
+from backend.util.hex_to_binary import hex_to_binary
 from backend.config import MINE_RATE
 
 
@@ -36,6 +37,7 @@ class Block:
             f"Difficulty: {self.difficulty}, "
             f"Nonce: {self.nonce})"
         )
+
     @staticmethod
     def mine_block(last_block, data):
         """
@@ -48,13 +50,13 @@ class Block:
         nonce = 0
         hash = crypto_hash(timestamp, last_hash, data, difficulty, nonce)
 
-        while hash[0:difficulty] != '0' * difficulty:
+        while hex_to_binary(hash)[0:difficulty] != '0' * difficulty:
             nonce += 1
             timestamp = time.time_ns()
             hash = crypto_hash(timestamp, last_hash, data, difficulty, nonce)
 
-
         return Block(timestamp, last_hash, hash, data, difficulty, nonce)
+
     @staticmethod
     def genesis():
         """
@@ -70,14 +72,11 @@ class Block:
         return Block(**GENESIS_DATA)
 
     @staticmethod
-    def adjust_difficulty(last_block,new_timestamp):
+    def adjust_difficulty(last_block, new_timestamp):
         """
         Calculate the adjusted difficulty according to the MINE_RATE.
-        Increase the difficulty for quickly mined blocks.
         Decrease the difficulty for slowly mined blocks.
-        :param last_block:
-        :param new_timestamp:
-        :return:
+        Increase the difficulty for quickly mined blocks.
         """
         if (new_timestamp - last_block.timestamp) < MINE_RATE:
             return last_block.difficulty + 1
@@ -88,13 +87,10 @@ class Block:
         return 1
 
 
-
-
 def main():
     genesis_block = Block.genesis()
     block = Block.mine_block(genesis_block, 'data')
     print(block)
-
 
 
 if __name__ == '__main__':
